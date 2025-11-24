@@ -1,0 +1,212 @@
+[
+    {
+        "id": "2f6ebb5cbe604774",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "ea6be0a2eae588c0",
+        "type": "mqtt-broker",
+        "name": "local",
+        "broker": "mqtt",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "53f4a4c483b45377",
+        "type": "influxdb",
+        "hostname": "127.0.0.1",
+        "port": 8086,
+        "protocol": "http",
+        "database": "database",
+        "name": "InfluxDBLocal",
+        "usetls": false,
+        "tls": "",
+        "influxdbVersion": "2.0",
+        "url": "http://influxdb:8086",
+        "timeout": "30",
+        "rejectUnauthorized": false
+    },
+    {
+        "id": "mqtt-broker",
+        "type": "mqtt-broker",
+        "name": "Local MQTT",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "influxdb-config",
+        "type": "influxdb",
+        "hostname": "influxdb",
+        "port": "8086",
+        "protocol": "http",
+        "database": "sensor_data",
+        "name": "InfluxDBLocal",
+        "usetls": false,
+        "influxdbVersion": "2.x"
+    },
+    {
+        "id": "mqtt-joystick",
+        "type": "mqtt in",
+        "z": "2f6ebb5cbe604774",
+        "name": "Joystick Input",
+        "topic": "controller/joystick",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "mqtt-broker",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
+        "x": 230,
+        "y": 320,
+        "wires": [
+            [
+                "function-joystick",
+                "ff12f27ed6f821af"
+            ]
+        ]
+    },
+    {
+        "id": "mqtt-buttons",
+        "type": "mqtt in",
+        "z": "2f6ebb5cbe604774",
+        "name": "Buttons Input",
+        "topic": "controller/buttons",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "mqtt-broker",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
+        "x": 230,
+        "y": 420,
+        "wires": [
+            [
+                "function-buttons",
+                "78e88f0f6bc9a3a8"
+            ]
+        ]
+    },
+    {
+        "id": "function-joystick",
+        "type": "function",
+        "z": "2f6ebb5cbe604774",
+        "name": "Validate & Scale Joystick",
+        "func": "// Zorg dat payload tussen -100 en 100 is\nif (msg.payload < -100 || msg.payload > 100) {\n    return null;\n}\n// schaal naar 0-1\nmsg.payload = (msg.payload + 100) / 200;\nmsg.measurement = \"joystick\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 480,
+        "y": 320,
+        "wires": [
+            [
+                "influxdb-out"
+            ]
+        ]
+    },
+    {
+        "id": "function-buttons",
+        "type": "function",
+        "z": "2f6ebb5cbe604774",
+        "name": "Validate Buttons",
+        "func": "// payload moet 0 of 1 zijn\nif (msg.payload !== 0 && msg.payload !== 1) {\n    return null;\n}\nmsg.measurement = \"buttons\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 480,
+        "y": 420,
+        "wires": [
+            [
+                "influxdb-out"
+            ]
+        ]
+    },
+    {
+        "id": "influxdb-out",
+        "type": "influxdb out",
+        "z": "2f6ebb5cbe604774",
+        "influxdb": "influxdb-config",
+        "name": "InfluxDB Write",
+        "measurement": "",
+        "x": 730,
+        "y": 370,
+        "wires": []
+    },
+    {
+        "id": "ff12f27ed6f821af",
+        "type": "debug",
+        "z": "2f6ebb5cbe604774",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 420,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "78e88f0f6bc9a3a8",
+        "type": "debug",
+        "z": "2f6ebb5cbe604774",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 420,
+        "y": 380,
+        "wires": []
+    }
+]
